@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher Approval–Disapproval Counter</title>
+
+  <style>
+    :root{
+      --bg: #0b0f19;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --muted2: rgba(255,255,255,.54);
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --round: 18px;
+      --good: rgba(68, 207, 130, .18);
+      --goodStroke: rgba(68, 207, 130, .32);
+      --bad: rgba(255, 92, 106, .16);
+      --badStroke: rgba(255, 92, 106, .32);
+      --chip: rgba(255,255,255,.10);
+      --chip2: rgba(255,255,255,.08);
+      --focus: rgba(142,227,255,.55);
+      --btn: rgba(255,255,255,.12);
+      --btn2: rgba(255,255,255,.08);
+      --danger: rgba(255, 92, 106, .75);
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(142,227,255,.22), transparent 55%),
+        radial-gradient(900px 500px at 100% 15%, rgba(210,168,255,.18), transparent 55%),
+        radial-gradient(700px 550px at 30% 100%, rgba(68,207,130,.14), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+
+    .wrap{ max-width: 1140px; margin: 0 auto; }
+
+    /* Header */
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      padding: 14px 14px 8px;
+      border-radius: calc(var(--round) + 6px);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px; min-width: 260px;
+    }
+    .logo{
+      height: 64px; width: auto;
+      object-fit: contain;
+      border-radius: 0;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,.45));
+    }
+    h1{ margin:0; font-size: 20px; letter-spacing: .2px; }
+    .by{ margin-top: 2px; font-size: 12px; color: var(--muted); }
+    .sub{
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    /* Layout */
+    .grid{ display:grid; grid-template-columns: 1fr; gap: 14px; margin-top: 12px; }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 1.06fr .94fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+      border: 1px solid var(--stroke);
+      border-radius: var(--round);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      backdrop-filter: blur(12px);
+    }
+
+    .row{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 980px){
+      .row.two{ grid-template-columns: 1fr 1fr; }
+      .row.three{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    label{ display:block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+    input[type="text"], input[type="date"], input[type="number"], input[type="url"], select, textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline: none;
+    }
+    textarea{ min-height: 120px; resize: vertical; }
+    input:focus, select:focus, textarea:focus{
+      border-color: var(--focus);
+      box-shadow: 0 0 0 4px rgba(142,227,255,.12);
+    }
+    input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.40); }
+    input[type="number"]{ max-width: 220px; }
+
+    /* Chips / pills */
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      font-weight: 750;
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+    .chip.off{ background: var(--chip2); color: var(--muted); }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: rgba(255,255,255,.35);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+    .dot.on{ background: rgba(68,207,130,.95); box-shadow: 0 0 0 3px rgba(68,207,130,.18); }
+    .dot.warn{ background: rgba(255, 193, 85, .95); box-shadow: 0 0 0 3px rgba(255, 193, 85, .18); }
+
+    /* Timer */
+    .timerBar{
+      display:flex; align-items:flex-end; justify-content:space-between; gap: 12px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .timeLabel{ font-size: 12px; color: var(--muted); }
+    .timeBig{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .6px;
+      font-size: 34px;
+      font-weight: 950;
+      line-height: 1.05;
+      margin-top: 2px;
+    }
+
+    /* Buttons */
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    button{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight: 850;
+      cursor:pointer;
+      touch-action: manipulation;
+      transition: transform .06s ease, background .12s ease, border-color .12s ease;
+      user-select: none;
+    }
+    button:hover{ background: rgba(255,255,255,.14); }
+    button:active{ transform: translateY(1px); }
+    button.secondary{ background: rgba(255,255,255,.08); }
+    button.danger{ background: rgba(255,92,106,.22); border-color: rgba(255,92,106,.35); }
+    button:disabled{ opacity: .55; cursor:not-allowed; }
+
+    /* Counters */
+    .counters{ display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+    @media (min-width: 980px){ .counters{ grid-template-columns: 1fr 1fr; } }
+
+    .counterCard{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 12px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items:center;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    }
+    .counterCard.good{ background: linear-gradient(180deg, var(--good), rgba(255,255,255,.02)); border-color: var(--goodStroke); }
+    .counterCard.bad{ background: linear-gradient(180deg, var(--bad), rgba(255,255,255,.02)); border-color: var(--badStroke); }
+    .cName{ font-weight: 950; letter-spacing: .2px; }
+    .cDesc{ margin-top: 4px; font-size: 12px; color: var(--muted); line-height: 1.35; }
+    .countWrap{ display:grid; gap: 8px; justify-items:end; }
+    .count{
+      font-size: 34px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Toggle */
+    .toggleRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .switch{
+      display:inline-flex; align-items:center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      user-select:none;
+    }
+    .switch input{ width: 18px; height: 18px; accent-color: rgba(142,227,255,.9); }
+
+    /* Video */
+    .videoBox{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.14);
+    }
+    video, iframe{
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 14px;
+      background: #000;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .msg{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 193, 85, .35);
+      background: rgba(255, 193, 85, .10);
+      color: rgba(255,255,255,.88);
+      font-size: 12px;
+      line-height: 1.35;
+      display:none;
+    }
+
+    /* Log */
+    .log{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
+      max-height: 360px;
+      overflow:auto;
+    }
+    .logHeader{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .logTitle{ font-weight: 950; }
+    .logSmall{ font-size: 12px; color: var(--muted); }
+    .logItem{
+      display:grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items:center;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      margin-bottom: 10px;
+    }
+    .tstamp{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: rgba(255,255,255,.85);
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      font-variant-numeric: tabular-nums;
+    }
+    .logCat{ font-weight: 900; }
+    .logMeta{ font-size: 12px; color: var(--muted2); margin-top: 2px; }
+    .jumpBtn{ padding: 9px 10px; border-radius: 14px; }
+
+    /* Export */
+    #output{
+      min-height: 220px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      white-space: pre;
+      background: rgba(0,0,0,.16);
+    }
+
+    /* Footer tip */
+    .tip{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    /* Small helper */
+    .kbd{
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.9);
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <img class="logo" src="Next-Gen-Music-Ed-logo-white.png" alt="Next Gen Music Ed logo">
+      <div>
+        <h1>Teacher Approval–Disapproval Counter</h1>
+        <div class="by">Developed by Kevin Droe, Ph.D.</div>
+      </div>
+    </div>
+    <div class="chips">
+      <span id="modeChip" class="chip"><span class="dot warn" id="modeDot"></span><span id="modeText">Live mode</span></span>
+      <span id="syncChip" class="chip off"><span class="dot" id="syncDot"></span><span id="syncText">Sync: Off</span></span>
+      <span id="stateChip" class="chip off"><span class="dot" id="stateDot"></span><span id="stateText">Stopped</span></span>
+    </div>
+  </div>
+
+  <div class="sub">
+    Count teacher responses after students do something: <b>Music approvals/disapprovals</b> and <b>Social approvals/disapprovals</b>.
+    Use <b>Live</b> mode in the classroom, or <b>Video</b> mode (upload a video or paste a YouTube link).
+  </div>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="card">
+      <div class="row two">
+        <div>
+          <label for="observer">Observer name</label>
+          <input id="observer" type="text" placeholder="Your name" />
+        </div>
+        <div>
+          <label for="date">Date</label>
+          <input id="date" type="date" />
+        </div>
+      </div>
+
+      <div class="row three" style="margin-top:10px;">
+        <div>
+          <label for="teacher">Observed teacher</label>
+          <input id="teacher" type="text" placeholder="Teacher name (optional)" />
+        </div>
+        <div>
+          <label for="context">Context</label>
+          <input id="context" type="text" placeholder="Lesson / rehearsal / sectional" />
+        </div>
+        <div>
+          <label for="duration">Target observation length (minutes)</label>
+          <input id="duration" type="number" min="1" step="1" value="10" />
+        </div>
+      </div>
+
+      <div class="videoBox">
+        <div class="row two">
+          <div>
+            <label for="mode">Mode</label>
+            <select id="mode">
+              <option value="live">Live Observation</option>
+              <option value="video">Video Observation</option>
+            </select>
+          </div>
+          <div class="toggleRow" style="align-content:end;">
+            <div class="switch">
+              <input id="sync" type="checkbox" />
+              <span style="font-weight:850;">Sync observation to playback</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="videoControls" style="display:none; margin-top:10px;">
+          <div class="row two">
+            <div>
+              <label for="videoFile">Case B — Upload video file</label>
+              <input id="videoFile" type="file" accept="video/*" />
+            </div>
+            <div>
+              <label for="ytUrl">Case A — Paste YouTube URL</label>
+              <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+          </div>
+
+          <div class="btnrow">
+            <button id="loadYt" class="secondary">Load YouTube</button>
+            <button id="clearVideo" class="secondary">Clear video</button>
+          </div>
+
+          <div id="ytMsg" class="msg"></div>
+
+          <div style="margin-top:10px;">
+            <div id="localWrap" style="display:none;">
+              <video id="video" controls playsinline></video>
+            </div>
+            <div id="ytWrap" style="display:none;">
+              <div id="ytPlayer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timerBar">
+        <div>
+          <div class="timeLabel">Elapsed time</div>
+          <div id="elapsed" class="timeBig">00:00.0</div>
+        </div>
+        <div class="chips" style="justify-content:flex-end;">
+          <span id="targetChip" class="chip">Target: 10:00</span>
+          <span id="timeChip" class="chip off">Time: 00:00</span>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button id="start">Start</button>
+        <button id="stop" class="secondary">Stop</button>
+        <button id="reset" class="danger">Reset</button>
+        <button id="export">Export summary</button>
+      </div>
+
+      <div class="counters" id="counters"></div>
+
+      <div class="btnrow">
+        <button id="undo" class="secondary">Undo last</button>
+        <button id="clearLog" class="secondary">Clear log</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label for="notes">Notes</label>
+        <textarea id="notes" placeholder="Notes (examples, patterns, reflections, context)…"></textarea>
+      </div>
+
+      <div class="tip">
+        Shortcuts: <span class="kbd">Space</span> Start/Stop •
+        <span class="kbd">1</span> Music approval • <span class="kbd">2</span> Music disapproval •
+        <span class="kbd">3</span> Social approval • <span class="kbd">4</span> Social disapproval •
+        <span class="kbd">Z</span> Undo • <span class="kbd">E</span> Export
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <div class="logHeader">
+        <div>
+          <div class="logTitle">Event Log</div>
+          <div class="logSmall">Each <b>+1</b> records a timestamp. In video mode, use <b>Jump</b> to seek.</div>
+        </div>
+        <div class="chips" style="justify-content:flex-end;">
+          <span class="chip off" id="jumpHelp">Jump requires video</span>
+        </div>
+      </div>
+
+      <div class="log" id="log"></div>
+
+      <div style="margin-top:12px;">
+        <label for="output">Export (copy/paste into LMS or Google Form)</label>
+        <textarea id="output" placeholder="Click “Export summary” to generate a clean report."></textarea>
+      </div>
+
+      <div class="btnrow" style="justify-content:flex-start;">
+        <button id="copy" class="secondary">Copy to clipboard</button>
+        <button id="csv" class="secondary">Download CSV</button>
+        <button id="jsonOut" class="secondary">Export Log JSON</button>
+        <button id="jsonInBtn" class="secondary">Import Log JSON</button>
+        <input id="jsonIn" type="file" accept="application/json" style="display:none;">
+      </div>
+
+      <div class="tip">
+        Sharing: export a JSON log and send it to a student. They can import it and load the same YouTube link (Case A) or the same video file (Case B) to use Jump.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube IFrame API (allowed external script) -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+(() => {
+  const categories = [
+    { id:"musicApproval",    label:"1. Music approval",    desc:"Verbal/non-verbal approval for student musical behavior.", tone:"good" },
+    { id:"musicDisapproval", label:"2. Music disapproval", desc:"Verbal/non-verbal disapproval or correction for student musical behavior.", tone:"bad"  },
+    { id:"socialApproval",   label:"3. Social approval",   desc:"Verbal/non-verbal approval for student social behavior.", tone:"good" },
+    { id:"socialDisapproval",label:"4. Social disapproval",desc:"Verbal/non-verbal disapproval for student social behavior.", tone:"bad" }
+  ];
+
+  const el = {
+    observer: document.getElementById("observer"),
+    date: document.getElementById("date"),
+    teacher: document.getElementById("teacher"),
+    context: document.getElementById("context"),
+    duration: document.getElementById("duration"),
+    notes: document.getElementById("notes"),
+
+    mode: document.getElementById("mode"),
+    sync: document.getElementById("sync"),
+
+    videoControls: document.getElementById("videoControls"),
+    videoFile: document.getElementById("videoFile"),
+    ytUrl: document.getElementById("ytUrl"),
+    loadYt: document.getElementById("loadYt"),
+    clearVideo: document.getElementById("clearVideo"),
+    ytMsg: document.getElementById("ytMsg"),
+    localWrap: document.getElementById("localWrap"),
+    ytWrap: document.getElementById("ytWrap"),
+    video: document.getElementById("video"),
+
+    elapsed: document.getElementById("elapsed"),
+    targetChip: document.getElementById("targetChip"),
+    timeChip: document.getElementById("timeChip"),
+
+    start: document.getElementById("start"),
+    stop: document.getElementById("stop"),
+    reset: document.getElementById("reset"),
+    export: document.getElementById("export"),
+    undo: document.getElementById("undo"),
+    clearLog: document.getElementById("clearLog"),
+
+    counters: document.getElementById("counters"),
+    log: document.getElementById("log"),
+
+    output: document.getElementById("output"),
+    copy: document.getElementById("copy"),
+    csv: document.getElementById("csv"),
+    jsonOut: document.getElementById("jsonOut"),
+    jsonInBtn: document.getElementById("jsonInBtn"),
+    jsonIn: document.getElementById("jsonIn"),
+
+    modeChip: document.getElementById("modeChip"),
+    modeText: document.getElementById("modeText"),
+    modeDot: document.getElementById("modeDot"),
+
+    syncChip: document.getElementById("syncChip"),
+    syncText: document.getElementById("syncText"),
+    syncDot: document.getElementById("syncDot"),
+
+    stateChip: document.getElementById("stateChip"),
+    stateText: document.getElementById("stateText"),
+    stateDot: document.getElementById("stateDot"),
+
+    jumpHelp: document.getElementById("jumpHelp")
+  };
+
+  // default date
+  el.date.valueAsDate = new Date();
+
+  const state = {
+    running: false,
+
+    // live timer
+    liveStartPerf: null,
+    liveElapsedMs: 0,
+
+    // counts + history
+    counts: Object.fromEntries(categories.map(c => [c.id, 0])),
+    history: [], // {catId}
+
+    // events
+    events: [], // {tSec, tText, catId, catLabel, source}
+
+    // video
+    videoMode: "none", // none | local | youtube
+    ytPlayer: null,
+    ytReady: false,
+    ytVideoId: null,
+    ytBlocked: false
+  };
+
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+  function fmtMs(ms){
+    const totalTenths = Math.floor(ms / 100);
+    const tenths = totalTenths % 10;
+    const totalSeconds = Math.floor(totalTenths / 10);
+    const s = totalSeconds % 60;
+    const m = Math.floor(totalSeconds / 60);
+    return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${tenths}`;
+  }
+
+  function fmtSec(sec){
+    if (!isFinite(sec) || sec < 0) return "N/A";
+    const s = Math.floor(sec);
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+  }
+
+  function updateTarget(){
+    const mins = clamp(parseInt(el.duration.value || "10", 10), 1, 999);
+    el.targetChip.textContent = `Target: ${fmtSec(mins * 60)}`;
+  }
+  el.duration.addEventListener("change", updateTarget);
+  updateTarget();
+
+  // UI chips
+  function setModeChip(){
+    const m = el.mode.value;
+    el.modeText.textContent = (m === "live") ? "Live mode" : "Video mode";
+    el.modeDot.className = "dot " + (m === "live" ? "warn" : "on");
+  }
+
+  function setSyncChip(){
+    const on = !!el.sync.checked;
+    el.syncText.textContent = `Sync: ${on ? "On" : "Off"}`;
+    el.syncChip.className = "chip " + (on ? "" : "off");
+    el.syncDot.className = "dot " + (on ? "on" : "");
+  }
+
+  function setStateChip(){
+    el.stateText.textContent = state.running ? "Running" : "Stopped";
+    el.stateChip.className = "chip " + (state.running ? "" : "off");
+    el.stateDot.className = "dot " + (state.running ? "on" : "");
+    el.start.disabled = state.running;
+    el.stop.disabled = !state.running;
+  }
+
+  function setJumpHelp(){
+    const ok = (el.mode.value === "video") && (state.videoMode === "local" || state.videoMode === "youtube");
+    el.jumpHelp.textContent = ok ? "Jump enabled" : "Jump requires video";
+    el.jumpHelp.className = "chip " + (ok ? "" : "off");
+  }
+
+  // Show/hide video controls
+  function applyModeUI(){
+    setModeChip();
+    setSyncChip();
+    if (el.mode.value === "video") {
+      el.videoControls.style.display = "";
+      el.sync.disabled = false;
+      setJumpHelp();
+      // in video mode, elapsed display follows video time (if available)
+    } else {
+      el.videoControls.style.display = "none";
+      el.sync.checked = false;
+      setSyncChip();
+      setJumpHelp();
+    }
+    // stop when switching modes (avoids confusion)
+    stop();
+    renderLog();
+  }
+
+  el.mode.addEventListener("change", applyModeUI);
+  el.sync.addEventListener("change", setSyncChip);
+  applyModeUI();
+
+  // Render counters
+  function renderCounters(){
+    el.counters.innerHTML = "";
+    categories.forEach((c) => {
+      const card = document.createElement("div");
+      card.className = `counterCard ${c.tone}`;
+
+      const left = document.createElement("div");
+      left.innerHTML = `<div class="cName">${c.label}</div><div class="cDesc">${c.desc}</div>`;
+
+      const right = document.createElement("div");
+      right.className = "countWrap";
+
+      const count = document.createElement("div");
+      count.className = "count";
+      count.id = `count-${c.id}`;
+      count.textContent = String(state.counts[c.id]);
+
+      const btns = document.createElement("div");
+      btns.className = "btnrow";
+      btns.style.marginTop = "0";
+      btns.style.justifyContent = "flex-end";
+
+      const plus = document.createElement("button");
+      plus.textContent = "+1";
+      plus.addEventListener("click", () => increment(c.id));
+
+      const minus = document.createElement("button");
+      minus.textContent = "-1";
+      minus.className = "secondary";
+      minus.addEventListener("click", () => decrement(c.id));
+
+      btns.appendChild(plus);
+      btns.appendChild(minus);
+
+      right.appendChild(count);
+      right.appendChild(btns);
+
+      card.appendChild(left);
+      card.appendChild(right);
+      el.counters.appendChild(card);
+    });
+  }
+
+  function paintCounts(){
+    categories.forEach(c => {
+      const n = document.getElementById(`count-${c.id}`);
+      if (n) n.textContent = String(state.counts[c.id]);
+    });
+  }
+
+  // Video handling
+  function setVideoMode(mode){
+    state.videoMode = mode; // none | local | youtube
+    el.localWrap.style.display = (mode === "local") ? "" : "none";
+    el.ytWrap.style.display = (mode === "youtube") ? "" : "none";
+    setJumpHelp();
+  }
+
+  function showYtMsg(text){
+    el.ytMsg.textContent = text;
+    el.ytMsg.style.display = text ? "block" : "none";
+  }
+
+  function clearLocalVideo(){
+    try { el.video.pause(); } catch {}
+    el.video.removeAttribute("src");
+    el.video.load();
+    el.videoFile.value = "";
+  }
+
+  function destroyYt(){
+    if (state.ytPlayer) {
+      try { state.ytPlayer.destroy(); } catch {}
+      state.ytPlayer = null;
+    }
+    state.ytReady = false;
+    state.ytVideoId = null;
+  }
+
+  function parseYouTubeId(url){
+    try{
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      const parts = u.pathname.split("/");
+      const i = parts.indexOf("embed");
+      if (i >= 0 && parts[i+1]) return parts[i+1];
+      return "";
+    }catch{
+      return "";
+    }
+  }
+
+  // YouTube IFrame API entrypoint
+  window.onYouTubeIframeAPIReady = () => {
+    // no-op (we instantiate on demand)
+  };
+
+  // Local upload (Case B)
+  el.videoFile.addEventListener("change", () => {
+    const f = el.videoFile.files && el.videoFile.files[0];
+    if (!f) return;
+
+    // clear yt
+    destroyYt();
+    el.ytUrl.value = "";
+    showYtMsg("");
+
+    const url = URL.createObjectURL(f);
+    el.video.src = url;
+    setVideoMode("local");
+  });
+
+  // YouTube load (Case A)
+  el.loadYt.addEventListener("click", () => {
+    const id = parseYouTubeId(el.ytUrl.value.trim());
+    if (!id) { alert("Could not read a YouTube video ID from that link."); return; }
+
+    // clear local
+    clearLocalVideo();
+
+    destroyYt();
+    showYtMsg("");
+
+    // Create player
+    document.getElementById("ytPlayer").innerHTML = "";
+    setVideoMode("youtube");
+    state.ytReady = false;
+    state.ytVideoId = id;
+
+    try{
+      state.ytPlayer = new YT.Player("ytPlayer", {
+        videoId: id,
+        playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
+        events: {
+          onReady: () => { state.ytReady = true; },
+          onError: () => {
+            state.ytReady = false;
+            showYtMsg("This YouTube video can’t be embedded (embedding disabled). Please use Upload Video instead (Case B).");
+          },
+          onStateChange: (ev) => {
+            // Sync to playback (YouTube)
+            if (!el.sync.checked || el.mode.value !== "video") return;
+            // 1 = playing, 2 = paused, 0 = ended
+            if (ev.data === 1) start();
+            if (ev.data === 2 || ev.data === 0) stop();
+          }
+        }
+      });
+    }catch{
+      showYtMsg("YouTube couldn’t be loaded. Please use Upload Video instead (Case B).");
+    }
+  });
+
+  // Clear video
+  el.clearVideo.addEventListener("click", () => {
+    clearLocalVideo();
+    destroyYt();
+    el.ytUrl.value = "";
+    showYtMsg("");
+    setVideoMode("none");
+  });
+
+  // Sync to playback (Local video)
+  el.video.addEventListener("play", () => {
+    if (el.mode.value !== "video") return;
+    if (!el.sync.checked) return;
+    start();
+  });
+  el.video.addEventListener("pause", () => {
+    if (el.mode.value !== "video") return;
+    if (!el.sync.checked) return;
+    stop();
+  });
+  el.video.addEventListener("ended", () => {
+    if (el.mode.value !== "video") return;
+    if (!el.sync.checked) return;
+    stop();
+  });
+
+  // Time source
+  function currentObservationTimeSec(){
+    if (el.mode.value === "live") return state.liveElapsedMs / 1000;
+
+    // video mode
+    if (state.videoMode === "local") return el.video.currentTime || 0;
+    if (state.videoMode === "youtube") {
+      if (state.ytReady && state.ytPlayer && state.ytPlayer.getCurrentTime) return state.ytPlayer.getCurrentTime() || 0;
+      return NaN;
+    }
+    return NaN;
+  }
+
+  // Loop
+  function tick(now){
+    if (!state.running) return;
+
+    if (el.mode.value === "live") {
+      if (state.liveStartPerf == null) state.liveStartPerf = now;
+      const dt = now - state.liveStartPerf;
+      state.liveStartPerf = now;
+      state.liveElapsedMs += dt;
+
+      // optional stop at target
+      const mins = clamp(parseInt(el.duration.value || "10", 10), 1, 999);
+      const targetMs = mins * 60 * 1000;
+      if (state.liveElapsedMs >= targetMs) {
+        state.liveElapsedMs = targetMs;
+        stop();
+      }
+
+      el.elapsed.textContent = fmtMs(state.liveElapsedMs);
+    } else {
+      const sec = currentObservationTimeSec();
+      el.elapsed.textContent = isFinite(sec) ? fmtMs(sec * 1000) : "00:00.0";
+    }
+
+    const sec = currentObservationTimeSec();
+    el.timeChip.textContent = "Time: " + (isFinite(sec) ? fmtSec(sec) : "N/A");
+    el.timeChip.className = "chip " + (isFinite(sec) ? "" : "off");
+
+    requestAnimationFrame(tick);
+  }
+
+  function start(){
+    if (state.running) return;
+    state.running = true;
+
+    if (el.mode.value === "live") {
+      state.liveStartPerf = null;
+    } else {
+      // attempt to play (may be blocked; user can press play)
+      if (state.videoMode === "local") {
+        el.video.play().catch(()=>{});
+      } else if (state.videoMode === "youtube" && state.ytReady && state.ytPlayer && state.ytPlayer.playVideo) {
+        try { state.ytPlayer.playVideo(); } catch {}
+      }
+    }
+
+    setStateChip();
+    requestAnimationFrame(tick);
+  }
+
+  function stop(){
+    if (!state.running) return;
+    state.running = false;
+
+    if (el.mode.value === "live") {
+      state.liveStartPerf = null;
+    } else {
+      // pause if sync enabled (nice behavior)
+      if (el.sync.checked) {
+        if (state.videoMode === "local") { try { el.video.pause(); } catch {} }
+        if (state.videoMode === "youtube" && state.ytReady && state.ytPlayer && state.ytPlayer.pauseVideo) {
+          try { state.ytPlayer.pauseVideo(); } catch {}
+        }
+      }
+    }
+
+    setStateChip();
+  }
+
+  function resetAll(){
+    stop();
+    state.liveElapsedMs = 0;
+    state.liveStartPerf = null;
+    el.elapsed.textContent = fmtMs(0);
+
+    for (const k of Object.keys(state.counts)) state.counts[k] = 0;
+    state.history = [];
+    state.events = [];
+    el.notes.value = "";
+    el.output.value = "";
+    paintCounts();
+    renderLog();
+  }
+
+  el.start.addEventListener("click", start);
+  el.stop.addEventListener("click", stop);
+  el.reset.addEventListener("click", resetAll);
+
+  // Events + counters
+  function logEvent(catId){
+    const cat = categories.find(c => c.id === catId);
+    const sec = currentObservationTimeSec();
+    const src = (el.mode.value === "live") ? "live" : state.videoMode;
+
+    state.events.push({
+      tSec: isFinite(sec) ? sec : null,
+      tText: isFinite(sec) ? fmtSec(sec) : "N/A",
+      catId,
+      catLabel: cat ? cat.label.replace(/^\d+\.\s*/,"") : catId,
+      source: src
+    });
+  }
+
+  function increment(catId){
+    state.counts[catId] += 1;
+    state.history.push({ catId });
+    paintCounts();
+    logEvent(catId);
+    renderLog();
+  }
+
+  function decrement(catId){
+    state.counts[catId] = Math.max(0, state.counts[catId] - 1);
+    paintCounts();
+  }
+
+  function undoLast(){
+    const last = state.history.pop();
+    if (!last) return;
+
+    state.counts[last.catId] = Math.max(0, state.counts[last.catId] - 1);
+    // remove last matching event
+    for (let i = state.events.length - 1; i >= 0; i--){
+      if (state.events[i].catId === last.catId){
+        state.events.splice(i, 1);
+        break;
+      }
+    }
+    paintCounts();
+    renderLog();
+  }
+
+  el.undo.addEventListener("click", undoLast);
+  el.clearLog.addEventListener("click", () => {
+    state.history = [];
+    state.events = [];
+    renderLog();
+  });
+
+  // Jump
+  function jumpTo(sec){
+    if (!isFinite(sec) || sec == null) return;
+    if (el.mode.value !== "video") return;
+
+    if (state.videoMode === "local") {
+      el.video.currentTime = sec;
+      el.video.play().catch(()=>{});
+    } else if (state.videoMode === "youtube" && state.ytReady && state.ytPlayer && state.ytPlayer.seekTo) {
+      state.ytPlayer.seekTo(sec, true);
+      try { state.ytPlayer.playVideo(); } catch {}
+    }
+  }
+
+  function renderLog(){
+    el.log.innerHTML = "";
+    setJumpHelp();
+
+    if (state.events.length === 0){
+      el.log.innerHTML = `<div style="color: rgba(255,255,255,.70); font-size: 12px;">No events logged yet.</div>`;
+      return;
+    }
+
+    const canJump = (el.mode.value === "video") && (state.videoMode === "local" || state.videoMode === "youtube");
+
+    state.events.slice().reverse().forEach((ev) => {
+      const item = document.createElement("div");
+      item.className = "logItem";
+
+      const t = document.createElement("div");
+      t.className = "tstamp";
+      t.textContent = ev.tText;
+
+      const mid = document.createElement("div");
+      mid.innerHTML = `<div class="logCat">${ev.catLabel}</div><div class="logMeta">Source: ${ev.source}</div>`;
+
+      const btn = document.createElement("button");
+      btn.className = "secondary jumpBtn";
+      btn.textContent = "Jump";
+      btn.disabled = !(canJump && isFinite(ev.tSec) && ev.tSec != null);
+      btn.addEventListener("click", () => jumpTo(ev.tSec));
+
+      item.appendChild(t);
+      item.appendChild(mid);
+      item.appendChild(btn);
+      el.log.appendChild(item);
+    });
+  }
+
+  // Export summary text
+  function exportSummary(){
+    if (state.running) stop();
+
+    const mins = clamp(parseInt(el.duration.value || "10", 10), 1, 999);
+    const mode = el.mode.value;
+    const timeSource = (mode === "live") ? "live stopwatch" : (state.videoMode === "local" ? "local video" : state.videoMode === "youtube" ? "YouTube" : "no video loaded");
+    const observedTime = (mode === "live") ? fmtSec(state.liveElapsedMs / 1000) : fmtSec(currentObservationTimeSec());
+
+    const lines = [];
+    lines.push("TEACHER APPROVAL–DISAPPROVAL COUNTER");
+    lines.push("-----------------------------------");
+    lines.push("Developed by Kevin Droe, Ph.D.");
+    lines.push("");
+
+    const observer = el.observer.value.trim();
+    const dateVal = el.date.value;
+    const teacher = el.teacher.value.trim();
+    const context = el.context.value.trim();
+
+    if (observer) lines.push(`Observer: ${observer}`);
+    if (dateVal) lines.push(`Date: ${dateVal}`);
+    if (teacher) lines.push(`Observed teacher: ${teacher}`);
+    if (context) lines.push(`Context: ${context}`);
+    lines.push(`Mode: ${mode}`);
+    lines.push(`Time source: ${timeSource}`);
+    lines.push(`Target length (min): ${mins}`);
+    lines.push(`Observed time: ${isFinite(currentObservationTimeSec()) || mode === "live" ? observedTime : "N/A"}`);
+
+    lines.push("");
+    lines.push("Counts (#):");
+    lines.push(`1. Music approvals: ${state.counts.musicApproval}`);
+    lines.push(`2. Music disapprovals: ${state.counts.musicDisapproval}`);
+    lines.push(`3. Social approvals: ${state.counts.socialApproval}`);
+    lines.push(`4. Social disapprovals: ${state.counts.socialDisapproval}`);
+
+    const notes = el.notes.value.trim();
+    if (notes){
+      lines.push("");
+      lines.push("Notes:");
+      lines.push(notes);
+    }
+
+    lines.push("");
+    lines.push("Event log (most recent first):");
+    if (state.events.length === 0) lines.push("(No events logged)");
+    else state.events.slice().reverse().forEach(ev => lines.push(`${ev.tText} — ${ev.catLabel}`));
+
+    lines.push("");
+    lines.push("One-line version:");
+    const one = [
+      observer ? `Observer=${observer}` : null,
+      dateVal ? `Date=${dateVal}` : null,
+      teacher ? `Teacher=${teacher}` : null,
+      context ? `Context=${context}` : null,
+      `Mode=${mode}`,
+      `Time=${isFinite(currentObservationTimeSec()) || mode === "live" ? observedTime : "N/A"}`,
+      `MusicApproval=${state.counts.musicApproval}`,
+      `MusicDisapproval=${state.counts.musicDisapproval}`,
+      `SocialApproval=${state.counts.socialApproval}`,
+      `SocialDisapproval=${state.counts.socialDisapproval}`,
+      `Events=${state.events.length}`
+    ].filter(Boolean).join(" | ");
+    lines.push(one);
+
+    el.output.value = lines.join("\n");
+  }
+  el.export.addEventListener("click", exportSummary);
+
+  // Copy
+  el.copy.addEventListener("click", async () => {
+    const text = el.output.value.trim();
+    if (!text) return;
+    try{
+      await navigator.clipboard.writeText(text);
+      el.copy.textContent = "Copied!";
+      setTimeout(() => el.copy.textContent = "Copy to clipboard", 900);
+    }catch{
+      el.output.focus(); el.output.select();
+      document.execCommand("copy");
+      el.copy.textContent = "Copied!";
+      setTimeout(() => el.copy.textContent = "Copy to clipboard", 900);
+    }
+  });
+
+  // CSV
+  function downloadCSV(){
+    if (state.running) stop();
+
+    const mins = clamp(parseInt(el.duration.value || "10", 10), 1, 999);
+    const mode = el.mode.value;
+    const timeSource = (mode === "live") ? "live" : state.videoMode;
+
+    const headers = [
+      "observer","date","observed_teacher","context",
+      "target_minutes","mode","time_source",
+      "music_approvals","music_disapprovals","social_approvals","social_disapprovals",
+      "notes",
+      "event_time","event_category","event_source"
+    ];
+
+    const base = [
+      el.observer.value.trim(),
+      el.date.value,
+      el.teacher.value.trim(),
+      el.context.value.trim(),
+      mins,
+      mode,
+      timeSource,
+      state.counts.musicApproval,
+      state.counts.musicDisapproval,
+      state.counts.socialApproval,
+      state.counts.socialDisapproval,
+      el.notes.value.trim()
+    ];
+
+    const esc = (s) => {
+      const str = (s ?? "").toString();
+      if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+      return str;
+    };
+
+    const rows = [];
+    if (state.events.length === 0){
+      rows.push([...base, "", "", ""].map(esc).join(","));
+    } else {
+      state.events.forEach(ev => {
+        rows.push([...base, ev.tText, ev.catLabel, ev.source].map(esc).join(","));
+      });
+    }
+
+    const csv = `${headers.join(",")}\n${rows.join("\n")}\n`;
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safe = (el.date.value || "observation").replace(/[^0-9a-z]+/gi,"_");
+    a.href = url;
+    a.download = `approval_disapproval_${safe}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  el.csv.addEventListener("click", downloadCSV);
+
+  // JSON export/import
+  function exportJSON(){
+    if (state.running) stop();
+
+    const payload = {
+      app: "Teacher Approval–Disapproval Counter",
+      developed_by: "Kevin Droe, Ph.D.",
+      version: "1.0",
+      exported_at: new Date().toISOString(),
+      metadata: {
+        observer: el.observer.value.trim(),
+        date: el.date.value,
+        observed_teacher: el.teacher.value.trim(),
+        context: el.context.value.trim(),
+        target_minutes: clamp(parseInt(el.duration.value || "10", 10), 1, 999),
+        mode: el.mode.value,
+        time_source: (el.mode.value === "live") ? "live" : state.videoMode,
+        youtube_url: el.ytUrl.value.trim() || null
+      },
+      counts: { ...state.counts },
+      notes: el.notes.value.trim(),
+      events: state.events.slice()
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safe = (el.date.value || "observation").replace(/[^0-9a-z]+/gi,"_");
+    a.href = url;
+    a.download = `approval_disapproval_${safe}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  el.jsonOut.addEventListener("click", exportJSON);
+
+  el.jsonInBtn.addEventListener("click", () => el.jsonIn.click());
+
+  el.jsonIn.addEventListener("change", async () => {
+    const f = el.jsonIn.files && el.jsonIn.files[0];
+    if (!f) return;
+    try{
+      const text = await f.text();
+      const data = JSON.parse(text);
+
+      // basic validation
+      if (!data || !data.counts || !data.events) throw new Error("Invalid file");
+
+      // apply
+      el.observer.value = data.metadata?.observer || "";
+      el.date.value = data.metadata?.date || el.date.value;
+      el.teacher.value = data.metadata?.observed_teacher || "";
+      el.context.value = data.metadata?.context || "";
+      el.duration.value = data.metadata?.target_minutes ?? el.duration.value;
+      updateTarget();
+
+      // mode
+      el.mode.value = data.metadata?.mode === "video" ? "video" : "live";
+      applyModeUI();
+
+      // counts
+      for (const c of categories){
+        if (typeof data.counts[c.id] === "number") state.counts[c.id] = Math.max(0, data.counts[c.id]);
+      }
+      paintCounts();
+
+      // notes
+      el.notes.value = data.notes || "";
+
+      // events
+      state.events = Array.isArray(data.events) ? data.events : [];
+      // rebuild history from events in order (only for undo, approximate)
+      state.history = state.events.map(ev => ({ catId: ev.catId })).filter(x => x.catId);
+
+      // YouTube URL autoload if present
+      const yt = data.metadata?.youtube_url;
+      if (yt){
+        el.ytUrl.value = yt;
+        // Attempt load YouTube
+        el.mode.value = "video";
+        applyModeUI();
+        el.loadYt.click();
+      } else {
+        // If no video loaded, advise
+        setTimeout(() => {
+          if (el.mode.value === "video" && state.videoMode === "none"){
+            showYtMsg("Load the same video to enable Jump.");
+          }
+        }, 300);
+      }
+
+      renderLog();
+      el.output.value = "";
+    }catch{
+      alert("Could not import that JSON file.");
+    } finally {
+      el.jsonIn.value = "";
+    }
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener("keydown", (e) => {
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+    if (e.code === "Space") { e.preventDefault(); state.running ? stop() : start(); return; }
+    if (e.key === "1") increment("musicApproval");
+    if (e.key === "2") increment("musicDisapproval");
+    if (e.key === "3") increment("socialApproval");
+    if (e.key === "4") increment("socialDisapproval");
+    if (e.key.toLowerCase() === "z") undoLast();
+    if (e.key.toLowerCase() === "e") exportSummary();
+  });
+
+  // Init
+  renderCounters();
+  paintCounts();
+  renderLog();
+  setModeChip();
+  setSyncChip();
+  setStateChip();
+  setJumpHelp();
+
+})();
+</script>
+</body>
+</html>
